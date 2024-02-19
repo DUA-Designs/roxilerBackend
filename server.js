@@ -24,6 +24,12 @@ const collectionName = "roxiler_collection";
 const database = client.db(dbName);
 const collection = database.collection(collectionName);
 
+async function run (){
+  await client.connect();
+  await client.db("admin").command({ ping: 1 });
+}
+run();
+
 
 const app =express();
 const corsOptions = {
@@ -38,8 +44,7 @@ const options = {projection: {  _id:0,id:1,title:1,price:1,description:1,categor
 
 app.get('/getTransactions',cors(),async (req,res)=>{
   try{
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
+     
   
    
          /*   
@@ -50,7 +55,7 @@ app.get('/getTransactions',cors(),async (req,res)=>{
       } catch (err) {
         console.error(`Something went wrong trying to find the documents: ${err}\n`);
       } */
-       const  { search="", month  } = req.query;
+       const  { search="", month=""  } = req.query;
       const  queryToDatabase=search ?
         {  $and:[
                 {
@@ -71,13 +76,13 @@ app.get('/getTransactions',cors(),async (req,res)=>{
        const cursor =await   collection.find(queryToDatabase, options);
        await new Promise(resolve=>setTimeout(()=>resolve("this is for loading time"),500));
             let data=[];
-            for await(const doc of cursor){
-           data.push(doc);}
+            for await(const doc of cursor){data.push(doc);}
             res.json(data);
  
     }catch(err){
       console.log(err);
     }
+     
 });
 
  
@@ -89,8 +94,7 @@ app.get('/getBarChart',cors(),async (req,res)=>{
   // Insert data into MongoDB
   const Statement= {dateOfSale:Number(month)} 
    try{
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
+  
   
     const cursor =await collection.find(Statement,options);
     await new Promise(resolve=>setTimeout(()=>resolve("this is for loading time"),500));
@@ -136,10 +140,7 @@ app.get('/getBarChart',cors(),async (req,res)=>{
    catch(err){
     console.log(err);
    }
-   finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
-  }
+   
   });
 
   app.get('/getStatistics',cors(),async (req,res)=>{
@@ -147,8 +148,7 @@ app.get('/getBarChart',cors(),async (req,res)=>{
     // Insert data into MongoDB
     const Statement= {dateOfSale:Number(month)} 
     try{
-        await client.connect();
-        await client.db("admin").command({ ping: 1 });
+       
     
         const cursor =await collection.find(Statement,options);
         await new Promise(resolve=>setTimeout(()=>resolve("this is for loading time"),500));
@@ -167,10 +167,7 @@ app.get('/getBarChart',cors(),async (req,res)=>{
      catch(err){
       console.log(err);
      }
-     finally {
-        // Ensures that the client will close when you finish/error
-        await client.close();
-      }
+      
     
     });
     
@@ -204,21 +201,20 @@ app.get('/getBarChart',cors(),async (req,res)=>{
        catch(err){
         console.log(err);
        }
-       finally {
-        // Ensures that the client will close when you finish/error
-        await client.close();
-      }
+        
       });
 
       app.get('/getCombinedData',cors(),async (req,res)=>{
         const month=req.query.month;
 
         try{
+        
+           
          
-            const [transactions,statistics,barChart,pieChart]=await Promise.all([axios.get(`http://localhost:8000/getTransactions?month=${month}`),
-                                                                                 axios.get(`http://localhost:8000/getStatistics?month=${month}`),
-                                                                                 axios.get(`http://localhost:8000/getBarChart?month=${month}`),
-                                                                                 axios.get(`http://localhost:8000/getPieChart?month=${month}`)]);
+            const [transactions,statistics,barChart,pieChart]=await Promise.all([axios.get(`https://roxilerback-end.onrender.com/getTransactions?month=${month}`),
+                                                                                 axios.get(`https://roxilerback-end.onrender.com/getStatistics?month=${month}`),
+                                                                                 axios.get(`https://roxilerback-end.onrender.com/getBarChart?month=${month}`),
+                                                                                 axios.get(`https://roxilerback-end.onrender.com/getPieChart?month=${month}`)]);
                      await new Promise(resolve=>setTimeout(()=>resolve("this is for loading time"),1000));
                      res.json({"transactions":transactions.data, "statistics":statistics.data, "barChart":barChart.data, "pieChart":pieChart.data});
           
@@ -226,10 +222,7 @@ app.get('/getBarChart',cors(),async (req,res)=>{
          catch(err){
           console.log(err);
          }
-         finally {
-            // Ensures that the client will close when you finish/error
-            await client.close();
-          }
+        
         
         
         });
@@ -237,6 +230,7 @@ app.get('/getBarChart',cors(),async (req,res)=>{
 
 app.listen(port,()=>{
     console.log(`Server started on port ${port}`);
+  
 });
 
  
